@@ -32,7 +32,7 @@ int main() {
 
 ```
 
-```go:key_program.go
+```go:main.go
 package main
 
 import "fmt"
