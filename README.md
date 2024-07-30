@@ -14,8 +14,7 @@ GoのバイナリはCのバイナリに比べて非常に大きいです。Goの
 
 ## CとGoのサイズ比較
 
-簡単なプログラムを二つ用意しました。
-ハードコードされた機密情報がバイナリ解析ツールから抽出されてしまう危険性をちょうど勉強していた最中だったので、このようなプログラムになっています。
+簡単なプログラムを二つ用意しました。ハードコードされた機密情報がバイナリ解析ツールから抽出されてしまう危険性をちょうど勉強していた最中だったので、このようなプログラムになっています。
 
 ```c:main.c
 #include <stdio.h>
@@ -50,13 +49,12 @@ func main() {
 ## 削減方法
 
 以下の削減方法を実施していきます。
-
-- ldflagsでデバッグ情報とシンボルテーブルを削除
-- trimpathでパス情報を削除
+- -ldflagsでデバッグ情報とシンボルテーブルを削除
+- -trimpathでパス情報を削除
 - stripで不要なメタデータの削除
 - UPXで圧縮
 
-以下が実験結果です。
+## 実験結果
 
 | バイナリ | サイズ | ビルドコマンド | 備考 |
 | ---- | ---- | ---- | ---- |
@@ -64,7 +62,7 @@ func main() {
 | main_go | 1.8M | `go build -o main_go main.go` | Go ノーオプション |
 | main_no_debug | 1.3M | `go build -ldflags="-s -w" -o main_no_debug main.go` | Go デバッグ情報、シンボルテーブル削除 |
 | main_no_debug_path | 1.3M | `go build -ldflags="-s -w" -trimpath -o main_no_debug_path main.go` | Go デバッグ、パス情報、シンボルテーブル削除 |
-| key_program_strip | 1.2M | `cp main_no_debug_path main_no_debug_path_strip; strip main_no_debug_path_strip` | Go シンボルテーブルやその他の不要な情報を削除 |
+| main_no_debug_path_strip | 1.2M | `cp main_no_debug_path main_no_debug_path_strip; strip main_no_debug_path_strip` | Go シンボルテーブルやその他の不要な情報を削除 |
 | main_upx | 465.3K | `cp main_no_debug_path_strip main_upx; upx --best main_upx` | UPX --bestで圧縮 |
 | main_lzma | 357.1K | `cp main_no_debug_path_strip main_lzma; upx --lzma main_lzma` | UPX lzmaで圧縮 |
 | main_ultra_brute | 357.1K | `cp main_no_debug_path_strip main_ultra_brute; upx --ultra-brute main_ultra_brute` | UPX ultra-bruteで圧縮 |
@@ -88,7 +86,6 @@ UPXを使用してバイナリを圧縮することで、さらに劇的にサ�
 
 
 効率的なビルドプロセスを自動化するためには、以下のシェルスクリプトを使用すると便利です。
-
 ```bash:build.sh
 #!/bin/bash
 
@@ -119,7 +116,6 @@ echo "Build completed. Final binary: $OUTPUT_BIN"
 /go/src # ./build.sh
 Building with debug and symbol table removal...
 Stripping the binary...
-strip: Unable to recognise the format of the input file `main'
 Compressing with UPX (lzma)...
                        Ultimate Packer for eXecutables
                           Copyright (C) 1996 - 2024
@@ -127,22 +123,7 @@ UPX 4.2.4       Markus Oberhumer, Laszlo Molnar & John Reiser    May 9th 2024
 
         File size         Ratio      Format      Name
    --------------------   ------   -----------   -----------
-   1228952 ->    449924   36.61%   linux/amd64   main                          
-
-Packed 1 file.
-Build completed. Final binary: main
-/go/src # ./build.sh
-Building with debug and symbol table removal...
-Stripping the binary...
-strip: Unable to recognise the format of the input file `main'
-Compressing with UPX (lzma)...
-                       Ultimate Packer for eXecutables
-                          Copyright (C) 1996 - 2024
-UPX 4.2.4       Markus Oberhumer, Laszlo Molnar & John Reiser    May 9th 2024
-
-        File size         Ratio      Format      Name
-   --------------------   ------   -----------   -----------
-   1228952 ->    449924   36.61%   linux/amd64   main                          
+   1285048 ->    401400   31.24%   linux/arm64   main
 
 Packed 1 file.
 Build completed. Final binary: main
